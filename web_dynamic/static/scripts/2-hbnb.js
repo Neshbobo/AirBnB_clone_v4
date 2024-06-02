@@ -1,30 +1,32 @@
-$(document).ready(function () {
-  const dict = {};
-  const $amenitiesCheck = $('input[type=checkbox]');
-  const $selectedAmenities = $('div.amenities h4');
-  const $statusIndicator = $('div#api_status');
-  const statusUri = 'http://localhost:5001/api/v1/status/';
+document.addEventListener('DOMContentLoaded', function () {
+  const HOST = 54.172.62.80;
+  const apiUrl = 'http://${HOST}:5001/api/v1/status/';
 
-  $amenitiesCheck.click(function () {
-    if ($(this).is(':checked')) {
-      dict[$(this).data('id')] = $(this).data('name');
-      $selectedAmenities.text(Object.values(dict).join(', '));
-    } else if ($(this).is(':not(:checked)')) {
-      delete dict[$(this).data('id')];
-      $selectedAmenities.text(Object.values(dict).join(', '));
-    }
-  });
-
-  $.ajax({
-    url: statusUri,
-    type: 'GET',
-    dataType: 'json',
-    success: function (data) {
-      if (data.status === 'OK') {
-        $statusIndicator.addClass('available');
-      } else {
-        $statusIndicator.removeClass('available');
+  // Function to fetch API status and update div#api_status
+  async function checkApiStatus () {
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
       }
+      const data = await response.json();
+      const status = data.status;
+
+      const apiStatusElement = document.querySelector('#api_status');
+
+      if (status === 'OK') {
+        apiStatusElement.classList.add('available');
+      } else {
+        apiStatusElement.classList.remove('available');
+      }
+    } catch (error) {
+      console.error('Error fetching API status:', error);
     }
-  });
+  }
+
+  // Call checkApiStatus on page load
+  checkApiStatus();
+
+  // Refresh API status every 10 seconds
+  setInterval(checkApiStatus, 10000);
 });
